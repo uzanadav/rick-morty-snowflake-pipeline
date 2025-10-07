@@ -46,55 +46,19 @@ def execute_all_checks(dal: SnowflakeDAL) -> List[Tuple]:
         dal: SnowflakeDAL instance
     
     Returns:
-        List of check results
+        List of check results (flattened from all queries)
     """
     logger.info("Executing quality check queries...")
     
-    # Read the SQL file
-    with open("sql/05_data_quality_checks.sql", 'r') as f:
-        sql_content = f.read()
+    # Use DAL method to execute all SELECT queries from file
+    results_by_query = dal.execute_queries_from_file("sql/05_data_quality_checks.sql")
     
-    # Split by semicolon (each check ends with ;)
-    raw_statements = sql_content.split(';')
-    
-    # Clean and filter statements
-    queries = []
-    for stmt in raw_statements:
-        # Remove comment-only lines and clean up
-        cleaned_lines = []
-        for line in stmt.split('\n'):
-            stripped = line.strip()
-            # Skip empty lines and section separators
-            if not stripped or stripped.startswith('-- ===='):
-                continue
-            # Skip standalone comment lines, but keep inline comments
-            if not stripped.startswith('--'):
-                cleaned_lines.append(line)
-        
-        cleaned_stmt = '\n'.join(cleaned_lines).strip()
-        
-        # Only add if it's a SELECT query
-        if cleaned_stmt and cleaned_stmt.upper().startswith('SELECT'):
-            queries.append(cleaned_stmt)
-    
-    logger.info(f"Found {len(queries)} quality check queries")
-    
-    # Execute each query and collect results
+    # Flatten results from all queries into single list
     all_results = []
+    for result_set in results_by_query:
+        all_results.extend(result_set)
     
-    for i, query in enumerate(queries, 1):
-        try:
-            result = dal.execute_query(query, fetch=True)
-            if result:
-                all_results.extend(result)
-                logger.debug(f"✓ Check {i}/{len(queries)} executed")
-        except Exception as e:
-            logger.warning(f"⚠ Check {i} failed: {e}")
-            # Continue with other checks
-    
-    logger.info(f"✓ Executed {len(queries)} quality checks successfully")
     logger.info("")
-    
     return all_results
 
 
