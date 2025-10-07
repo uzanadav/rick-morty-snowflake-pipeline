@@ -233,7 +233,7 @@ def run_ingestion() -> Dict[str, List[Dict[str, Any]]]:
     Returns:
         Dictionary with 'characters' and 'episodes' keys containing the data
     """
-    logger.info("\n🚀 Starting Rick and Morty API Ingestion Pipeline")
+    logger.info("\n Starting Rick and Morty API Ingestion Pipeline")
     logger.info("=" * 60)
     
     client = RickMortyAPIClient()
