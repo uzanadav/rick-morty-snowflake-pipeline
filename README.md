@@ -9,7 +9,7 @@ A data pipeline that ingests Rick and Morty API data into Snowflake with full da
 ./scripts/setup.sh
 
 # 2. Configure (edit with your Snowflake credentials)
-cp .env.example .env
+cp env.example .env
 vim .env
 
 # 3. Run
