@@ -208,6 +208,63 @@ class SnowflakeDAL:
         
         self.execute_script(sql_script)
     
+    def execute_queries_from_file(self, sql_file_path: str) -> List[List[tuple]]:
+        """
+        Execute multiple SELECT queries from a file and return all results.
+        Useful for data quality checks and validation scripts.
+        
+        Args:
+            sql_file_path: Path to SQL file with SELECT queries
+        
+        Returns:
+            List of result sets (one per query)
+        """
+        logger.info(f"Executing queries from file: {sql_file_path}")
+        
+        with open(sql_file_path, 'r') as f:
+            sql_content = f.read()
+        
+        # Split by semicolon
+        raw_statements = sql_content.split(';')
+        
+        # Clean and filter to only SELECT queries
+        queries = []
+        for stmt in raw_statements:
+            # Remove comment-only lines and clean up
+            cleaned_lines = []
+            for line in stmt.split('\n'):
+                stripped = line.strip()
+                # Skip empty lines and section separators
+                if not stripped or stripped.startswith('-- ===='):
+                    continue
+                # Skip standalone comment lines
+                if not stripped.startswith('--'):
+                    cleaned_lines.append(line)
+            
+            cleaned_stmt = '\n'.join(cleaned_lines).strip()
+            
+            # Only add if it's a SELECT query
+            if cleaned_stmt and cleaned_stmt.upper().startswith('SELECT'):
+                queries.append(cleaned_stmt)
+        
+        logger.info(f"Found {len(queries)} SELECT queries to execute")
+        
+        # Execute each query and collect results
+        all_results = []
+        
+        for i, query in enumerate(queries, 1):
+            try:
+                result = self.execute_query(query, fetch=True)
+                if result:
+                    all_results.append(result)
+                logger.debug(f"✓ Query {i}/{len(queries)} executed")
+            except SnowflakeError as e:
+                logger.warning(f"⚠ Query {i} failed: {e}")
+                # Continue with other queries
+        
+        logger.info(f"✓ Executed {len(queries)} queries successfully")
+        return all_results
+    
     def table_exists(self, table_name: str, schema: Optional[str] = None) -> bool:
         """
         Check if a table exists.
