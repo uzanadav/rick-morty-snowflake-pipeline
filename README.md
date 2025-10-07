@@ -266,8 +266,3 @@ python main.py --step all
 ✅ 13 quality checks (100% pass rate)  
 ✅ Single command execution  
 
----
-
-## License
-
-MIT - Data Engineering Assessment Project
